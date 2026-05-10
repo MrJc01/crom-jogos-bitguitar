@@ -321,6 +321,7 @@ func main() {
 				}
 
 				// Modo JOGADOR
+				isPlaying = true
 				screen.Clear()
 				w, h := screen.Size()
 				trackStartX := (w / 2) - 10
