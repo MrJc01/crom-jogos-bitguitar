@@ -18,12 +18,6 @@ COPY . .
 # Compila o binário do servidor
 RUN go build -o bitguitar_server ./cmd/server
 
-# Compila os clientes de terminal para facilitar download (Zero-Install)
-RUN mkdir -p public/downloads
-RUN GOOS=linux GOARCH=amd64 go build -o public/downloads/bitguitar-linux-amd64 ./cmd/cli
-RUN GOOS=darwin GOARCH=arm64 go build -o public/downloads/bitguitar-macos-arm64 ./cmd/cli
-RUN GOOS=windows GOARCH=amd64 go build -o public/downloads/bitguitar-windows-amd64.exe ./cmd/cli
-
 # Imagem final hiper-leve
 FROM alpine:3.19
 

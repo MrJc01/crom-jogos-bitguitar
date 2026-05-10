@@ -175,33 +175,28 @@ echo -e "\033[0;32m"
 echo "====================================="
 echo "   BITGUITAR - AI HACKER TRAINING    "
 echo "====================================="
-echo "Conectando em %s..."
+echo "Iniciando conexão com %s..."
 echo -e "\033[0m"
 
-OS="$(uname -s)"
-ARCH="$(uname -m)"
-BIN_NAME="bitguitar-linux-amd64"
-
-if [ "$OS" = "Darwin" ]; then
-    if [ "$ARCH" = "arm64" ]; then
-        BIN_NAME="bitguitar-macos-arm64"
-    else
-        BIN_NAME="bitguitar-macos-amd64" # Fallback, mas não compilamos no docker por padrão
-    fi
-elif [ "$OS" = "Linux" ]; then
-    BIN_NAME="bitguitar-linux-amd64"
+if ! command -v go &> /dev/null
+then
+    echo "Erro: Go não está instalado. O módulo de áudio exige compilação nativa."
+    echo "Por favor, instale o Golang na sua máquina para jogar no terminal."
+    exit 1
 fi
 
-# Diretório temporário
-mkdir -p /tmp/bitguitar
-cd /tmp/bitguitar
-
-echo "Baixando o núcleo do BitGuitar ($BIN_NAME)..."
-curl -sL "%s%s/downloads/$BIN_NAME" -o bitguitar_cli
-chmod +x bitguitar_cli
+# Instala as dependências de audio nativas se for Debian/Ubuntu (ALSA)
+if command -v apt-get &> /dev/null; then
+    if ! dpkg -l | grep -q libasound2-dev; then
+        echo "Aviso: A biblioteca de áudio ALSA (libasound2-dev) pode estar faltando."
+        echo "Se o jogo falhar ao compilar o áudio, instale com: sudo apt install libasound2-dev"
+        echo "Continuando..."
+    fi
+fi
 
 export BITGUITAR_HOST="%s%s"
-./bitguitar_cli "$@"
-`, host, protocol, host, protocol, host)
+# Força o Go a buscar o commit mais recente diretamente do Github, ignorando o cache do Proxy do Google
+GOPROXY=direct GOSUMDB=off go run github.com/MrJc01/crom-jogos-bitguitar/cmd/cli@master "$@"
+`, host, protocol, host)
 	w.Write([]byte(script))
 }
