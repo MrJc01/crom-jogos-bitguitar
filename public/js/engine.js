@@ -7,6 +7,7 @@ class BitGuitarEngine {
         
         this.audioCtx = null;
         this.audioSource = null;
+        this.gainNode = null;
         this.startTime = 0;
         this.durationMs = 0;
         
@@ -123,6 +124,8 @@ class BitGuitarEngine {
         this.activeNotes = [...beatmap];
         
         this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        this.gainNode = this.audioCtx.createGain();
+        this.gainNode.connect(this.audioCtx.destination);
         
         const response = await fetch(url);
         const arrayBuffer = await response.arrayBuffer();
@@ -130,7 +133,7 @@ class BitGuitarEngine {
         
         this.audioSource = this.audioCtx.createBufferSource();
         this.audioSource.buffer = audioBuffer;
-        this.audioSource.connect(this.audioCtx.destination);
+        this.audioSource.connect(this.gainNode);
         
         this.audioSource.onended = () => {
             this.running = false;
@@ -258,5 +261,11 @@ class BitGuitarEngine {
             }
         });
         this.ctx.globalAlpha = 1.0;
+    }
+    
+    setMute(isMuted) {
+        if (this.gainNode) {
+            this.gainNode.gain.value = isMuted ? 0 : 1;
+        }
     }
 }

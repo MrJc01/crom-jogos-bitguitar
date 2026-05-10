@@ -12,6 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnJoin = document.getElementById('btn-join');
     const joinContainer = document.getElementById('join-container');
     
+    const bgAudio = document.getElementById('spectator-audio');
+    const btnMute = document.getElementById('btn-mute');
+    let isGlobalMuted = false;
+    
     const radioStatus = document.getElementById('radio-status');
     const radioCountdown = document.getElementById('radio-countdown');
     const musicTimer = document.getElementById('music-timer');
@@ -39,6 +43,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let serverStartTimeMs = 0;
     let serverDurationMs = 0;
     let serverNextSongTitle = "";
+
+    function toggleMute() {
+        isGlobalMuted = !isGlobalMuted;
+        if (bgAudio) bgAudio.muted = isGlobalMuted;
+        if (engine) engine.setMute(isGlobalMuted);
+        if (btnMute) btnMute.innerText = isGlobalMuted ? "🔇 UNMUTE (M)" : "🔈 MUTE (M)";
+    }
+
+    if (btnMute) {
+        btnMute.addEventListener('click', toggleMute);
+    }
 
     // --- Configuração de Teclas ---
     let gameKeys = loadKeys();
@@ -149,6 +164,10 @@ document.addEventListener('DOMContentLoaded', () => {
         serverNextSongTitle = msg.nextSong ? msg.nextSong.title : "";
         
         if (currentServerState === "WAITING") {
+            if (bgAudio) {
+                bgAudio.pause();
+                bgAudio.currentTime = 0;
+            }
             if (isPlayingLocal && engine) {
                 engine.running = false;
                 isPlayingLocal = false;
@@ -196,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             if (wantsToPlay && !isPlayingLocal) {
+                if (bgAudio) bgAudio.pause();
                 isPlayingLocal = true;
                 lobbyScreen.classList.add('hidden');
                 gameUI.classList.remove('hidden');
@@ -203,6 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 trackNameEl.innerText = msg.song.title;
                 
                 engine = new BitGuitarEngine('game-canvas', gameKeys);
+                engine.setMute(isGlobalMuted);
                 engine.durationMs = serverDurationMs;
                 engine.onScoreUpdate = (score, combo) => {
                     scoreEl.innerText = String(score).padStart(6, '0');
@@ -229,6 +250,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else if (!wantsToPlay) {
                 radioStatus.innerText = `EM OPERAÇÃO — ${msg.song.title}`;
+                if (bgAudio && bgAudio.src !== window.location.origin + msg.song.url) {
+                    bgAudio.src = msg.song.url;
+                }
+                const diffMs = msg.startTimeMs - Date.now();
+                if (diffMs > 0) {
+                    setTimeout(() => {
+                        if (currentServerState === "PLAYING" && !wantsToPlay) {
+                            bgAudio.currentTime = 0;
+                            bgAudio.play().catch(e=>console.log("Audio play prevented:", e));
+                        }
+                    }, diffMs);
+                } else {
+                    bgAudio.currentTime = Math.abs(diffMs) / 1000;
+                    bgAudio.play().catch(e=>console.log("Audio play prevented:", e));
+                }
             }
         }
     }
@@ -259,6 +295,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let escOpen = false;
 
     window.addEventListener('keydown', (e) => {
+        if ((e.key === 'm' || e.key === 'M') && document.activeElement.tagName !== 'INPUT') {
+            toggleMute();
+            return;
+        }
         if (e.key === 'Escape') {
             if (escOpen) {
                 closeEscModal();

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -30,13 +31,14 @@ var (
 	board     []multiplayer.PlayerState
 	boardMu   sync.Mutex
 
-	currentSong  *game.Song
-	nextSong     *game.Song
-	startTimeMs  int64
-	countdownMs  int64
-	durationMs   int64
-	wantsToPlay  = false
-	isPlaying    = false
+	currentSong   *game.Song
+	nextSong      *game.Song
+	startTimeMs   int64
+	countdownMs   int64
+	durationMs    int64
+	wantsToPlay   = false
+	isPlaying     = false
+	isGlobalMuted = false
 
 	screen tcell.Screen
 
@@ -219,33 +221,6 @@ func main() {
 			}
 
 		} else if gameState == "PLAYING" && currentSong != nil {
-			if !wantsToPlay {
-				// Modo espectador
-				drawSpectatorView(screen, defStyle)
-				time.Sleep(100 * time.Millisecond)
-				select {
-				case ev := <-evCh:
-					if checkExit(ev) {
-						return
-					}
-					switch ev := ev.(type) {
-					case *tcell.EventKey:
-						if ev.Key() == tcell.KeyRune && (ev.Rune() == 'j' || ev.Rune() == 'J') {
-							wantsToPlay = true
-							myName = os.Getenv("USER")
-							if myName == "" {
-								myName = "TerminalHacker"
-							}
-							sendHello(myName)
-						}
-					case *tcell.EventResize:
-						screen.Sync()
-					}
-				default:
-				}
-				continue
-			}
-
 			host := os.Getenv("BITGUITAR_HOST")
 			if host == "" {
 				host = "http://localhost:8080"
@@ -290,7 +265,7 @@ func main() {
 				}
 			}
 
-			ctrl := &beep.Ctrl{Streamer: streamer, Paused: false}
+			ctrl := &beep.Ctrl{Streamer: streamer, Paused: isGlobalMuted}
 			speaker.Play(ctrl)
 
 			notes := currentSong.Beatmap
@@ -302,6 +277,50 @@ func main() {
 			keyMap := buildKeyMap()
 
 			for gameState == "PLAYING" {
+				if !wantsToPlay {
+					// Modo espectador
+					drawSpectatorView(screen, defStyle)
+					select {
+					case ev := <-evCh:
+						if checkExit(ev) {
+							return
+						}
+						switch ev := ev.(type) {
+						case *tcell.EventKey:
+							if ev.Key() == tcell.KeyRune {
+								if ev.Rune() == 'j' || ev.Rune() == 'J' {
+									wantsToPlay = true
+									myName = os.Getenv("USER")
+									if myName == "" {
+										myName = "TerminalHacker"
+									}
+									sendHello(myName)
+								} else if ev.Rune() == 'm' || ev.Rune() == 'M' {
+									isGlobalMuted = !isGlobalMuted
+									ctrl.Paused = isGlobalMuted
+									if !isGlobalMuted {
+										elapsed := time.Now().UnixMilli() - startTimeMs
+										target := int(float64(elapsed) / 1000.0 * float64(format.SampleRate))
+										if target < 0 {
+											target = 0
+										}
+										if target > streamer.Len() {
+											target = streamer.Len()
+										}
+										streamer.Seek(target)
+									}
+								}
+							}
+						case *tcell.EventResize:
+							screen.Sync()
+						}
+					default:
+						time.Sleep(100 * time.Millisecond)
+					}
+					continue
+				}
+
+				// Modo JOGADOR
 				screen.Clear()
 				w, h := screen.Size()
 				trackStartX := (w / 2) - 10
@@ -411,6 +430,20 @@ func main() {
 									score += points * (1 + (combo / 10))
 								} else {
 									combo = 0
+								}
+							} else if ev.Rune() == 'm' || ev.Rune() == 'M' {
+								isGlobalMuted = !isGlobalMuted
+								ctrl.Paused = isGlobalMuted
+								if !isGlobalMuted {
+									elapsed := time.Now().UnixMilli() - startTimeMs
+									target := int(float64(elapsed) / 1000.0 * float64(format.SampleRate))
+									if target < 0 {
+										target = 0
+									}
+									if target > streamer.Len() {
+										target = streamer.Len()
+									}
+									streamer.Seek(target)
 								}
 							}
 						}
