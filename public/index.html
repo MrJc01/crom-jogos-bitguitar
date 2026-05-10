@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BitGuitar - Hacker AI Training Online</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        .flex-container { display: flex; justify-content: center; gap: 20px; align-items: flex-start; }
+        #live-leaderboard { margin-top: 20px; border: 1px solid #0f0; padding: 10px; width: 320px; margin-left: auto; margin-right: auto; }
+        #leaderboard-list, #game-leaderboard-list { list-style: none; padding: 0; margin: 0; text-align: left; }
+        #leaderboard-list li, #game-leaderboard-list li { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.9rem; }
+        .info-row { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.9rem; opacity: 0.8; }
+        .settings-panel { border: 1px solid #0f0; padding: 15px; margin-top: 15px; text-align: left; }
+        .settings-panel label { display: inline-block; width: 80px; margin-bottom: 8px; }
+        .settings-panel input { background: #000; border: 1px solid #0f0; color: #0f0; padding: 5px; width: 50px; text-align: center; font-family: 'Share Tech Mono', monospace; font-size: 1rem; }
+        .settings-panel button { margin-top: 10px; }
+        .footer { position: fixed; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 0.75rem; opacity: 0.5; z-index: 1; }
+        .footer a { color: #0f0; text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+        #music-timer { font-size: 1.1rem; color: #0ff; margin-top: 5px; }
+        #next-song-info { color: #ff0; margin-top: 5px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div id="lobby-screen" class="screen">
+        <h1>[ RÁDIO CENTRAL ]</h1>
+        <h2 id="radio-status">Sincronizando com a Rede...</h2>
+        <p id="music-timer"></p>
+        <p id="next-song-info"></p>
+        <p id="radio-countdown"></p>
+
+        <div class="hacker-input" id="join-container" style="margin: 20px 0; border: 1px dashed #0f0; padding: 15px;">
+            <p>Deseja invadir a próxima trilha?</p>
+            <input type="text" id="player-name" maxlength="15" autocomplete="off" placeholder="Sua Assinatura">
+            <button id="btn-join">ENTRAR NA FILA</button>
+        </div>
+
+        <div id="live-leaderboard">
+            <h3>PONTUAÇÃO GLOBAL DA SALA</h3>
+            <ul id="leaderboard-list">
+                <li>Aguardando dados...</li>
+            </ul>
+        </div>
+
+        <!-- Configurações de Teclas -->
+        <div class="settings-panel" id="settings-panel">
+            <h3>[ CONFIGURAÇÕES DE TECLAS ]</h3>
+            <p style="font-size:0.8rem; opacity:0.7;">Defina quais teclas usar para cada coluna:</p>
+            <div>
+                <label>Coluna 1:</label><input type="text" id="key-0" maxlength="1" value="D"><br>
+                <label>Coluna 2:</label><input type="text" id="key-1" maxlength="1" value="F"><br>
+                <label>Coluna 3:</label><input type="text" id="key-2" maxlength="1" value="J"><br>
+                <label>Coluna 4:</label><input type="text" id="key-3" maxlength="1" value="K"><br>
+            </div>
+            <button id="btn-save-keys">SALVAR TECLAS</button>
+            <span id="keys-saved-msg" style="margin-left:10px; color:#0ff; display:none;">✓ Salvo!</span>
+        </div>
+        
+        <div class="terminal-instruction" style="margin-top: 20px;">
+            <p>=== MODO TERMINAL RAIZ ===</p>
+            <p>Para jogar sincronizado via terminal, execute:</p>
+            <code id="terminal-cmd">curl -sL http://localhost:8080/play.sh | bash</code>
+        </div>
+    </div>
+
+    <div id="game-ui" class="screen hidden">
+        <div class="hud">
+            <div class="hud-item">SCORE: <span id="score">000000</span></div>
+            <div class="hud-item">COMBO: <span id="combo">0</span>x</div>
+            <div class="hud-item">TRACK: <span id="track-name">UNKNOWN</span></div>
+            <div class="hud-item" id="game-timer-hud">00:00 / 00:00</div>
+        </div>
+        
+        <div class="flex-container">
+            <div class="game-container">
+                <canvas id="game-canvas" width="400" height="600"></canvas>
+                
+                <div id="touch-controls" class="hidden">
+                    <div class="touch-zone" data-lane="0"><span id="touch-key-0">D</span></div>
+                    <div class="touch-zone" data-lane="1"><span id="touch-key-1">F</span></div>
+                    <div class="touch-zone" data-lane="2"><span id="touch-key-2">J</span></div>
+                    <div class="touch-zone" data-lane="3"><span id="touch-key-3">K</span></div>
+                </div>
+            </div>
+
+            <div id="game-leaderboard" style="border: 1px solid #0f0; padding: 10px; width: 250px; max-height: 600px; overflow-y: auto;">
+                <h3 style="margin-top:0;">COMPETIDORES AO VIVO</h3>
+                <ul id="game-leaderboard-list" style="list-style: none; padding: 0;"></ul>
+                <p id="game-next-song" style="color:#ff0; margin-top:10px; font-size:0.8rem;"></p>
+            </div>
+        </div>
+        
+        <div class="instructions" id="instructions-text">
+            TECLAS: [D] [F] [J] [K]<br>
+            Aperte a tecla quando o bit chegar na linha inferior.
+        </div>
+    </div>
+
+    <div class="footer">
+        BitGuitar — Um projeto do laboratório de jogos da <a href="https://crom.run" target="_blank">crom.run</a>
+    </div>
+    <!-- Modal ESC -->
+    <div id="esc-modal" class="hidden" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:1000;display:flex;align-items:center;justify-content:center;">
+        <div style="border:2px solid #0f0;padding:30px;text-align:center;background:#050505;max-width:400px;width:90%;">
+            <h2 style="margin-bottom:15px;">[ DESCONECTAR? ]</h2>
+            <p>Deseja voltar ao Lobby?</p>
+            <p style="font-size:0.8rem;opacity:0.6;margin-top:5px;">Seu progresso nesta rodada será perdido.</p>
+            <div style="margin-top:20px;">
+                <button id="esc-yes" style="background:#0f0;color:#000;border:none;padding:10px 25px;font-family:'Share Tech Mono',monospace;font-size:1rem;cursor:pointer;margin-right:10px;">SIM</button>
+                <button id="esc-no" style="background:#000;color:#0f0;border:1px solid #0f0;padding:10px 25px;font-family:'Share Tech Mono',monospace;font-size:1rem;cursor:pointer;">NÃO</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/engine.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

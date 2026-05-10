@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  bitguitar:
+    build: .
+    container_name: bitguitar_server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./musicas:/app/musicas
+      # Mapear o rankings.json para persistência, se você estiver usando persistência em arquivo
+      - ./rankings.json:/app/rankings.json
+    environment:
+      - PORT=8080
+      - SONG_DIR=/app/musicas

@@ -1,0 +1,27 @@
+# Binários e Executáveis
+/bitguitar_server
+/cli
+/bot
+*.exe
+*.out
+*.app
+
+# Logs
+*.log
+
+# Arquivos de Sistema e IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Configurações Locais e Secrets
+.env
+.server.pid
+
+# Dados Locais
+/rankings.json
+
+# Se quiser ignorar músicas enviadas mas manter a pasta:
+# (Para manter a pasta, adicionaremos um .gitkeep dentro dela)
+/musicas/*
+!/musicas/.gitkeep
