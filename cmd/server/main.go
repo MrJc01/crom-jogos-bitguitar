@@ -175,17 +175,33 @@ echo -e "\033[0;32m"
 echo "====================================="
 echo "   BITGUITAR - AI HACKER TRAINING    "
 echo "====================================="
-echo "Iniciando conexão com %s..."
+echo "Conectando em %s..."
 echo -e "\033[0m"
 
-if ! command -v go &> /dev/null
-then
-    echo "Erro: Go não está instalado. Por favor instale o Golang para executar o treinamento no terminal."
-    exit 1
+OS="$(uname -s)"
+ARCH="$(uname -m)"
+BIN_NAME="bitguitar-linux-amd64"
+
+if [ "$OS" = "Darwin" ]; then
+    if [ "$ARCH" = "arm64" ]; then
+        BIN_NAME="bitguitar-macos-arm64"
+    else
+        BIN_NAME="bitguitar-macos-amd64" # Fallback, mas não compilamos no docker por padrão
+    fi
+elif [ "$OS" = "Linux" ]; then
+    BIN_NAME="bitguitar-linux-amd64"
 fi
 
+# Diretório temporário
+mkdir -p /tmp/bitguitar
+cd /tmp/bitguitar
+
+echo "Baixando o núcleo do BitGuitar ($BIN_NAME)..."
+curl -sL "%s%s/downloads/$BIN_NAME" -o bitguitar_cli
+chmod +x bitguitar_cli
+
 export BITGUITAR_HOST="%s%s"
-go run github.com/MrJc01/crom-jogos-bitguitar/cmd/cli@master "$@"
-`, host, protocol, host)
+./bitguitar_cli "$@"
+`, host, protocol, host, protocol, host)
 	w.Write([]byte(script))
 }
