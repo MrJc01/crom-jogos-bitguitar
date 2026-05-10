@@ -195,8 +195,8 @@ if command -v apt-get &> /dev/null; then
 fi
 
 export BITGUITAR_HOST="%s%s"
-# Força o Go a buscar o commit mais recente diretamente do Github, ignorando o cache do Proxy do Google
-GOPROXY=direct GOSUMDB=off go run github.com/MrJc01/crom-jogos-bitguitar/cmd/cli@master "$@"
+# Força o Go a buscar o commit mais recente diretamente do Github
+GOPROXY=direct go run github.com/MrJc01/crom-jogos-bitguitar/cmd/cli@master "$@"
 `, host, protocol, host)
 	w.Write([]byte(script))
 }
