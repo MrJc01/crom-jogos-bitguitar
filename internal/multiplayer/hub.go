@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/crom/bitguitar/internal/game"
+	"github.com/MrJc01/crom-jogos-bitguitar/internal/game"
 	"github.com/gorilla/websocket"
 )
 

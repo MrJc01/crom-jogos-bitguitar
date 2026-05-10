@@ -25,3 +25,9 @@
 # (Para manter a pasta, adicionaremos um .gitkeep dentro dela)
 /musicas/*
 !/musicas/.gitkeep
+
+# Ferramentas e Pastas de Download
+/pack_musicas/
+download_pack.sh
+download_musicas.log
+yt-dlp

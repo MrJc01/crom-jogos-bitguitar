@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/crom/bitguitar/internal/game"
+	"github.com/MrJc01/crom-jogos-bitguitar/internal/game"
 )
 
 func setupTestMux(t *testing.T) (*http.ServeMux, string) {

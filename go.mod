@@ -1,4 +1,4 @@
-module github.com/crom/bitguitar
+module github.com/MrJc01/crom-jogos-bitguitar
 
 go 1.24.0
 

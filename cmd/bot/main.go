@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/crom/bitguitar/internal/multiplayer"
+	"github.com/MrJc01/crom-jogos-bitguitar/internal/multiplayer"
 	"github.com/gorilla/websocket"
 )
 

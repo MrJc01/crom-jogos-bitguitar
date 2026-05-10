@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/crom/bitguitar/internal/game"
-	"github.com/crom/bitguitar/internal/multiplayer"
+	"github.com/MrJc01/crom-jogos-bitguitar/internal/game"
+	"github.com/MrJc01/crom-jogos-bitguitar/internal/multiplayer"
 	"github.com/gdamore/tcell/v2"
 	"github.com/gopxl/beep"
 	"github.com/gopxl/beep/mp3"
