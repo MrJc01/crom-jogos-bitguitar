@@ -1,5 +1,5 @@
 # Multi-stage build para manter a imagem final pequena
-FROM golang:1.22-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # Variáveis de ambiente pro Go
 ENV CGO_ENABLED=0 \
