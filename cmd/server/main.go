@@ -163,12 +163,19 @@ func handleSongs(w http.ResponseWriter, r *http.Request, musicasPath string) {
 
 func handlePlaySh(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
-	script := `#!/bin/bash
+
+	protocol := "http://"
+	if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
+		protocol = "https://"
+	}
+	host := r.Host
+
+	script := fmt.Sprintf(`#!/bin/bash
 echo -e "\033[0;32m"
 echo "====================================="
 echo "   BITGUITAR - AI HACKER TRAINING    "
 echo "====================================="
-echo "Iniciando conexão local..."
+echo "Iniciando conexão com %s..."
 echo -e "\033[0m"
 
 if ! command -v go &> /dev/null
@@ -177,15 +184,8 @@ then
     exit 1
 fi
 
-PROJECT_DIR="/home/j/Documentos/GitHub/crom-jogos/bitguitar"
-
-if [ -d "$PROJECT_DIR/cmd/cli" ]; then
-    cd "$PROJECT_DIR"
-    go run ./cmd/cli "$@"
-else
-    echo "Erro: Diretório fonte não encontrado. O servidor está rodando localmente?"
-    exit 1
-fi
-`
+export BITGUITAR_HOST="%s%s"
+go run github.com/MrJc01/crom-jogos-bitguitar/cmd/cli@master "$@"
+`, host, protocol, host)
 	w.Write([]byte(script))
 }

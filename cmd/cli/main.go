@@ -85,12 +85,25 @@ func main() {
 		myName = "TerminalHacker"
 	}
 
+	host := os.Getenv("BITGUITAR_HOST")
+	if host == "" {
+		host = "localhost:8080"
+	}
+
+	protocol := "ws://"
+	if strings.HasPrefix(host, "https://") {
+		protocol = "wss://"
+		host = strings.TrimPrefix(host, "https://")
+	} else if strings.HasPrefix(host, "http://") {
+		host = strings.TrimPrefix(host, "http://")
+	}
+
 	// Conectar WS
-	u := "ws://localhost:8080/ws"
+	u := protocol + host + "/ws"
 	var err error
 	wsConn, _, err = websocket.DefaultDialer.Dial(u, nil)
 	if err != nil {
-		fmt.Println("Erro ao conectar no servidor WS na porta 8080. O monitor.sh está rodando?")
+		fmt.Printf("Erro ao conectar no servidor WS em %s. O servidor está rodando?\n", u)
 		os.Exit(1)
 	}
 	defer wsConn.Close()
@@ -233,9 +246,14 @@ func main() {
 				continue
 			}
 
-			// === MODO JOGO ===
-			isPlaying = true
-			audioResp, err := http.Get("http://localhost:8080" + currentSong.URL)
+			host := os.Getenv("BITGUITAR_HOST")
+			if host == "" {
+				host = "http://localhost:8080"
+			} else if !strings.HasPrefix(host, "http") {
+				host = "http://" + host // Fallback
+			}
+
+			audioResp, err := http.Get(host + currentSong.URL)
 			if err != nil {
 				continue
 			}

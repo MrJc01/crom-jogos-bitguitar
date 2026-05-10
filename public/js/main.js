@@ -1,4 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Atualiza a instrução de terminal de acordo com o host
+    const terminalCmd = document.getElementById('terminal-cmd');
+    if (terminalCmd) {
+        terminalCmd.innerText = `curl -sL ${window.location.protocol}//${window.location.host}/play.sh | bash`;
+    }
+
     const lobbyScreen = document.getElementById('lobby-screen');
     const gameUI = document.getElementById('game-ui');
     
